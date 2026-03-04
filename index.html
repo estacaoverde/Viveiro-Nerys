@@ -118,13 +118,10 @@ button{
 
 <div id="venda" class="section active">
 <h3>Venda</h3>
-
 <input id="buscarVenda" placeholder="Buscar produto" oninput="filtrarProdutos()">
 <div id="listaVenda"></div>
-
 <h4>Itens</h4>
 <div id="itensVenda"></div>
-
 <p class="total">Total: R$ <span id="totalVenda">0.00</span></p>
 <button onclick="finalizarVenda()">Finalizar Venda</button>
 </div>
@@ -152,7 +149,6 @@ button{
 <button onclick="abrirCaixa()">Abrir Caixa</button>
 <button onclick="fecharCaixa()">Fechar Caixa</button>
 <p id="statusCaixa"></p>
-
 <hr>
 <h3>Total Vendido Hoje</h3>
 <p class="total">R$ <span id="totalHoje">0.00</span></p>
@@ -163,7 +159,7 @@ button{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCX68TreUoB6XMSrXQ73CYzCJRQMebBB-g",
@@ -194,12 +190,20 @@ window.mostrar=function(sec){
 }
 
 window.addProduto=async function(){
+ if(!nome.value || !valor.value || !estoqueInput.value){
+   alert("Preencha todos os campos");
+   return;
+ }
+
  await addDoc(collection(db,"produtos"),{
   nome:nome.value,
   valor:parseFloat(valor.value),
   estoque:parseInt(estoqueInput.value)
  });
- nome.value="";valor.value="";estoqueInput.value="";
+
+ nome.value="";
+ valor.value="";
+ estoqueInput.value="";
 }
 
 onSnapshot(collection(db,"produtos"),(snap)=>{
@@ -211,13 +215,22 @@ onSnapshot(collection(db,"produtos"),(snap)=>{
 
   listaEstoque.innerHTML+=`
    <div class="card">
-   ${p.nome} | Estoque: ${p.estoque}
-   <button onclick="alterar('${p.id}',${p.estoque+1})">+</button>
-   <button onclick="alterar('${p.id}',${p.estoque-1})">-</button>
+   <b>${p.nome}</b><br>
+   Estoque: ${p.estoque}<br><br>
+   <button onclick="alterar('${p.id}',${p.estoque+1})">➕</button>
+   <button onclick="alterar('${p.id}',${p.estoque-1})">➖</button>
+   <button onclick="removerProduto('${p.id}')">🗑 Excluir</button>
    </div>
   `;
  });
 });
+
+window.removerProduto = async function(id){
+ if(confirm("Tem certeza que deseja excluir este produto?")){
+   await deleteDoc(doc(db,"produtos",id));
+   alert("Produto removido com sucesso");
+ }
+}
 
 window.filtrarProdutos=function(){
  let texto=buscarVenda.value.toLowerCase();
@@ -300,12 +313,16 @@ window.remover=async function(index){
 
 window.finalizarVenda=async function(){
  if(total===0)return;
+
  await addDoc(collection(db,"vendas"),{
   total:total,
   data:new Date(),
   dataTexto:new Date().toLocaleString()
  });
- total=0;itens=[];atualizar();
+
+ total=0;
+ itens=[];
+ atualizar();
  alert("Venda Finalizada");
 }
 
@@ -355,6 +372,7 @@ window.alternarTema=function(){
   localStorage.setItem("tema","light");
  }
 }
+
 if(localStorage.getItem("tema")==="dark"){
  document.body.classList.add("dark");
 }
