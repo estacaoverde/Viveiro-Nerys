@@ -6,18 +6,80 @@
 <title>Caixa Estação Verde</title>
 
 <style>
+:root{
+  --verde1:#2e7d32;
+  --verde2:#66bb6a;
+  --verde3:#1b5e20;
+  --fundo:#f2f2f2;
+  --card:#ffffff;
+  --texto:#222;
+}
+
+.dark{
+  --verde1:#0d3b1e;
+  --verde2:#145a32;
+  --verde3:#0b2e17;
+  --fundo:#121212;
+  --card:#1e1e1e;
+  --texto:#f5f5f5;
+}
+
 body{
   font-family:Arial;
-  background:#f2f2f2;
   margin:0;
+  background:var(--fundo);
+  color:var(--texto);
+  transition:0.3s;
 }
+
 header{
-  background:#2e7d32;
+  background:linear-gradient(90deg,var(--verde1),var(--verde2));
   color:white;
   padding:15px;
   text-align:center;
+  position:relative;
 }
-.container{ padding:15px; }
+
+.tema-btn{
+  position:absolute;
+  right:10px;
+  top:15px;
+  background:white;
+  color:black;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.dark .tema-btn{
+  background:#333;
+  color:white;
+}
+
+.menu{
+  display:flex;
+  overflow-x:auto;
+  background:linear-gradient(90deg,var(--verde3),var(--verde1));
+}
+
+.menu button{
+  flex:1;
+  padding:12px;
+  background:none;
+  border:none;
+  color:white;
+  font-weight:bold;
+}
+
+.menu button:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+.container{padding:15px;}
+
+.section{display:none;}
+.active{display:block;}
 
 input,button{
   padding:10px;
@@ -28,35 +90,25 @@ input,button{
 }
 
 button{
-  background:#2e7d32;
+  background:linear-gradient(90deg,var(--verde1),var(--verde2));
   color:white;
   border:none;
   cursor:pointer;
 }
 
-button:hover{
-  background:#1b5e20;
-}
+button:hover{opacity:0.9;}
 
 .card{
-  background:white;
+  background:var(--card);
   padding:12px;
   margin:10px 0;
-  border-radius:8px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
 .total{
   font-size:20px;
   font-weight:bold;
-}
-
-.hidden{ display:none; }
-
-.itemVenda{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
 }
 </style>
 </head>
@@ -65,59 +117,65 @@ button:hover{
 
 <header>
 <h2>🌿 Caixa Estação Verde</h2>
+<button class="tema-btn" onclick="alternarTema()">🌙 Tema</button>
 </header>
-
-<div class="container">
 
 <input type="password" id="senha" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 
-<div id="sistema" class="hidden">
+<div id="sistema" style="display:none;">
 
-<h3>Controle de Caixa</h3>
-<button onclick="abrirCaixa()">Abrir Caixa</button>
-<button onclick="fecharCaixa()">Fechar Caixa</button>
-<p id="statusCaixa"></p>
+<div class="menu">
+  <button onclick="mostrar('venda')">🛒 Venda</button>
+  <button onclick="mostrar('produtos')">📦 Produtos</button>
+  <button onclick="mostrar('estoque')">📊 Estoque</button>
+  <button onclick="mostrar('historico')">📜 Histórico</button>
+  <button onclick="mostrar('caixa')">💰 Caixa</button>
+</div>
 
-<hr>
+<div class="container">
 
-<h3>Cadastrar Produto</h3>
-<input id="nome" placeholder="Nome do produto">
-<input id="valor" type="number" placeholder="Valor">
-<input id="estoque" type="number" placeholder="Estoque">
-<button onclick="addProduto()">Salvar Produto</button>
+<div id="venda" class="section active">
+<h3>Venda</h3>
+<input id="buscarVenda" placeholder="Buscar produto">
+<div id="listaVenda"></div>
 
-<hr>
-
-<h3>Estoque</h3>
-<div id="listaProdutos"></div>
-
-<hr>
-
-<h3>🛒 Venda</h3>
-
-<input type="text" id="buscarVenda" placeholder="🔎 Procurar produto pelo nome">
-
-<div id="vendaProdutos"></div>
-
-<h4>Itens da Venda</h4>
+<h4>Itens</h4>
 <div id="itensVenda"></div>
 
-<div class="card">
 <p class="total">Total: R$ <span id="totalVenda">0.00</span></p>
 <button onclick="finalizarVenda()">Finalizar Venda</button>
 </div>
 
-<hr>
+<div id="produtos" class="section">
+<h3>Cadastrar Produto</h3>
+<input id="nome" placeholder="Nome">
+<input id="valor" type="number" placeholder="Valor">
+<input id="estoqueInput" type="number" placeholder="Estoque">
+<button onclick="addProduto()">Salvar</button>
+</div>
 
-<h3>Histórico de Vendas</h3>
-<div id="historico"></div>
+<div id="estoque" class="section">
+<h3>Controle de Estoque</h3>
+<div id="listaEstoque"></div>
+</div>
+
+<div id="historico" class="section">
+<h3>Histórico</h3>
+<div id="listaHistorico"></div>
+</div>
+
+<div id="caixa" class="section">
+<h3>Controle de Caixa</h3>
+<button onclick="abrirCaixa()">Abrir Caixa</button>
+<button onclick="fecharCaixa()">Fechar Caixa</button>
+<p id="statusCaixa"></p>
+</div>
 
 </div>
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
@@ -133,170 +191,135 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let caixaAberto = false;
-let totalVenda = 0;
-let itens = [];
-let listaCompleta = [];
+let caixaAberto=false;
+let total=0;
+let itens=[];
+let produtos=[];
 
-window.login = function(){
-  if(senha.value === "2020"){
-    sistema.classList.remove("hidden");
-  } else {
-    alert("Senha incorreta");
-  }
+window.login=function(){
+ if(senha.value==="2020"){
+  sistema.style.display="block";
+ } else alert("Senha incorreta");
 }
 
-window.abrirCaixa = function(){
-  caixaAberto = true;
-  statusCaixa.innerText = "Caixa Aberto";
+window.mostrar=function(sec){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(sec).classList.add("active");
 }
 
-window.fecharCaixa = function(){
-  caixaAberto = false;
-  statusCaixa.innerText = "Caixa Fechado";
+window.addProduto=async function(){
+ await addDoc(collection(db,"produtos"),{
+  nome:nome.value,
+  valor:parseFloat(valor.value),
+  estoque:parseInt(estoqueInput.value)
+ });
+ nome.value="";valor.value="";estoqueInput.value="";
 }
 
-window.addProduto = async function(){
-  await addDoc(collection(db,"produtos"),{
-    nome:nome.value,
-    valor:parseFloat(valor.value),
-    estoque:parseInt(estoque.value)
-  });
+onSnapshot(collection(db,"produtos"),(snap)=>{
+ listaVenda.innerHTML="";
+ listaEstoque.innerHTML="";
+ produtos=[];
 
-  nome.value="";
-  valor.value="";
-  estoque.value="";
-}
+ snap.forEach(d=>{
+  let p={id:d.id,...d.data()};
+  produtos.push(p);
 
-onSnapshot(collection(db,"produtos"),(snapshot)=>{
-  listaProdutos.innerHTML="";
-  listaCompleta=[];
+  listaVenda.innerHTML+=`
+   <div class="card">
+   ${p.nome} - R$ ${p.valor}
+   <button onclick="vender('${p.id}','${p.nome}',${p.valor},${p.estoque})">Adicionar</button>
+   </div>
+  `;
 
-  snapshot.forEach(docSnap=>{
-    let p = docSnap.data();
-    let id = docSnap.id;
-
-    listaCompleta.push({id,...p});
-
-    listaProdutos.innerHTML+=`
-      <div class="card">
-      <b>${p.nome}</b><br>
-      R$ ${p.valor} | Estoque: ${p.estoque}<br>
-      <button onclick="aumentar('${id}',${p.estoque})">+</button>
-      <button onclick="diminuir('${id}',${p.estoque})">-</button>
-      </div>
-    `;
-  });
-
-  mostrarProdutosVenda(listaCompleta);
+  listaEstoque.innerHTML+=`
+   <div class="card">
+   ${p.nome} | Estoque: ${p.estoque}
+   <button onclick="alterar('${p.id}',${p.estoque+1})">+</button>
+   <button onclick="alterar('${p.id}',${p.estoque-1})">-</button>
+   </div>
+  `;
+ });
 });
 
-function mostrarProdutosVenda(lista){
-  vendaProdutos.innerHTML="";
-
-  lista.forEach(p=>{
-    vendaProdutos.innerHTML+=`
-      <div class="card">
-      <b>${p.nome}</b><br>
-      R$ ${p.valor} | Estoque: ${p.estoque}
-      <button onclick="vender('${p.id}','${p.nome}',${p.valor},${p.estoque})">
-      ➕ Adicionar
-      </button>
-      </div>
-    `;
-  });
+window.alterar=async function(id,novo){
+ if(novo<0)return;
+ await updateDoc(doc(db,"produtos",id),{estoque:novo});
 }
 
-buscarVenda.addEventListener("input",(e)=>{
-  let texto = e.target.value.toLowerCase();
-  let filtrado = listaCompleta.filter(p =>
-    p.nome.toLowerCase().includes(texto)
-  );
-  mostrarProdutosVenda(filtrado);
+window.vender=async function(id,nome,valor,estoque){
+ if(!caixaAberto){alert("Abra o caixa");return;}
+ if(estoque<=0){alert("Sem estoque");return;}
+
+ await updateDoc(doc(db,"produtos",id),{estoque:estoque-1});
+ total+=valor;
+ itens.push({nome,valor});
+ atualizar();
+}
+
+function atualizar(){
+ totalVenda.innerText=total.toFixed(2);
+ itensVenda.innerHTML="";
+ itens.forEach((i,index)=>{
+  itensVenda.innerHTML+=`
+   <div class="card">
+   ${i.nome} - R$ ${i.valor}
+   <button onclick="remover(${index})">❌</button>
+   </div>
+  `;
+ });
+}
+
+window.remover=function(index){
+ total-=itens[index].valor;
+ itens.splice(index,1);
+ atualizar();
+}
+
+window.finalizarVenda=async function(){
+ if(total===0)return;
+ await addDoc(collection(db,"vendas"),{
+  total:total,
+  data:new Date().toLocaleString()
+ });
+ total=0;itens=[];atualizar();
+ alert("Venda Finalizada");
+}
+
+onSnapshot(collection(db,"vendas"),(snap)=>{
+ listaHistorico.innerHTML="";
+ snap.forEach(v=>{
+  let d=v.data();
+  listaHistorico.innerHTML+=`
+   <div class="card">
+   ${d.data}<br>Total: R$ ${d.total.toFixed(2)}
+   </div>
+  `;
+ });
 });
 
-window.aumentar = async function(id,estoque){
-  await updateDoc(doc(db,"produtos",id),{
-    estoque:estoque+1
-  });
+window.abrirCaixa=function(){
+ caixaAberto=true;
+ statusCaixa.innerText="Caixa Aberto";
 }
 
-window.diminuir = async function(id,estoque){
-  if(estoque>0){
-    await updateDoc(doc(db,"produtos",id),{
-      estoque:estoque-1
-    });
-  }
+window.fecharCaixa=function(){
+ caixaAberto=false;
+ statusCaixa.innerText="Caixa Fechado";
 }
 
-window.vender = async function(id,nome,valor,estoque){
-  if(!caixaAberto){ alert("Abra o caixa primeiro"); return; }
-  if(estoque<=0){ alert("Sem estoque"); return; }
-
-  await updateDoc(doc(db,"produtos",id),{
-    estoque:estoque-1
-  });
-
-  totalVenda += valor;
-  itens.push({id,nome,valor});
-  atualizarVenda();
+window.alternarTema=function(){
+ document.body.classList.toggle("dark");
+ if(document.body.classList.contains("dark")){
+  localStorage.setItem("tema","dark");
+ }else{
+  localStorage.setItem("tema","light");
+ }
 }
 
-function atualizarVenda(){
-  totalVendaEl.innerText = totalVenda.toFixed(2);
-  itensVenda.innerHTML="";
-
-  itens.forEach((item,index)=>{
-    itensVenda.innerHTML+=`
-      <div class="card itemVenda">
-      ${item.nome} - R$ ${item.valor}
-      <button onclick="removerItem(${index})">❌</button>
-      </div>
-    `;
-  });
+if(localStorage.getItem("tema")==="dark"){
+ document.body.classList.add("dark");
 }
-
-window.removerItem = async function(index){
-  let item = itens[index];
-
-  await updateDoc(doc(db,"produtos",item.id),{
-    estoque: listaCompleta.find(p=>p.id===item.id).estoque + 1
-  });
-
-  totalVenda -= item.valor;
-  itens.splice(index,1);
-  atualizarVenda();
-}
-
-window.finalizarVenda = async function(){
-  if(totalVenda===0) return;
-
-  await addDoc(collection(db,"vendas"),{
-    total:totalVenda,
-    data:new Date().toLocaleString()
-  });
-
-  totalVenda = 0;
-  itens=[];
-  atualizarVenda();
-  alert("Venda Finalizada!");
-}
-
-const totalVendaEl=document.getElementById("totalVenda");
-
-onSnapshot(collection(db,"vendas"),(snapshot)=>{
-  historico.innerHTML="";
-  snapshot.forEach(v=>{
-    let venda=v.data();
-    historico.innerHTML+=`
-      <div class="card">
-      ${venda.data}<br>
-      Total: R$ ${venda.total.toFixed(2)}
-      </div>
-    `;
-  });
-});
-
 </script>
 
 </body>
