@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixa Verde</title>
+
+<style>
+body{font-family:Arial;background:#f2f2f2;margin:0}
+header{background:#2e7d32;color:white;padding:15px;text-align:center}
+.container{padding:15px}
+input,button{padding:10px;margin:5px 0;width:100%}
+button{background:#2e7d32;color:white;border:none;border-radius:5px}
+.card{background:white;padding:10px;margin:10px 0;border-radius:8px}
+.total{font-size:18px;font-weight:bold}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>🌿 Caixa Estação Verde</h2>
+</header>
+
+<div class="container">
+
+<input type="password" id="senha" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+
+<div id="sistema" class="hidden">
+
+<h3>Caixa</h3>
+<button onclick="abrirCaixa()">Abrir Caixa</button>
+<button onclick="fecharCaixa()">Fechar Caixa</button>
+<p id="statusCaixa"></p>
+
+<hr>
+
+<h3>Cadastrar Produto</h3>
+<input id="nome" placeholder="Nome do produto">
+<input id="valor" type="number" placeholder="Valor">
+<input id="estoque" type="number" placeholder="Estoque">
+<button onclick="addProduto()">Salvar Produto</button>
+
+<hr>
+
+<h3>Estoque</h3>
+<div id="listaProdutos"></div>
+
+<hr>
+
+<h3>Venda</h3>
+<div id="vendaProdutos"></div>
+<p class="total">Total: R$ <span id="totalVenda">0.00</span></p>
+<button onclick="finalizarVenda()">Finalizar Venda</button>
+
+<hr>
+
+<h3>Histórico</h3>
+<div id="historico"></div>
+
+</div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCX68TreUoB6XMSrXQ73CYzCJRQMebBB-g",
+  authDomain: "caixaverdee-d52dc.firebaseapp.com",
+  projectId: "caixaverdee-d52dc",
+  storageBucket: "caixaverdee-d52dc.firebasestorage.app",
+  messagingSenderId: "208791321789",
+  appId: "1:208791321789:web:b54b11053c44afed5c8bd4"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let totalVenda = 0;
+let caixaAberto = false;
+
+window.login = function(){
+  if(document.getElementById("senha").value === "2020"){
+    document.getElementById("sistema").classList.remove("hidden");
+  } else {
+    alert("Senha incorreta");
+  }
+}
+
+window.abrirCaixa = function(){
+  caixaAberto = true;
+  statusCaixa.innerText = "Caixa Aberto";
+}
+
+window.fecharCaixa = function(){
+  caixaAberto = false;
+  statusCaixa.innerText = "Caixa Fechado";
+}
+
+window.addProduto = async function(){
+  await addDoc(collection(db,"produtos"),{
+    nome:nome.value,
+    valor:parseFloat(valor.value),
+    estoque:parseInt(estoque.value)
+  });
+
+  nome.value="";
+  valor.value="";
+  estoque.value="";
+}
+
+onSnapshot(collection(db,"produtos"),(snapshot)=>{
+  listaProdutos.innerHTML="";
+  vendaProdutos.innerHTML="";
+
+  snapshot.forEach(docSnap=>{
+    let p = docSnap.data();
+    let id = docSnap.id;
+
+    listaProdutos.innerHTML+=`
+      <div class="card">
+      <b>${p.nome}</b><br>
+      R$ ${p.valor} | Estoque: ${p.estoque}<br>
+      <button onclick="aumentar('${id}',${p.estoque})">+</button>
+      <button onclick="diminuir('${id}',${p.estoque})">-</button>
+      </div>
+    `;
+
+    vendaProdutos.innerHTML+=`
+      <div class="card">
+      ${p.nome} - R$ ${p.valor}
+      <button onclick="vender('${id}',${p.valor},${p.estoque})">Adicionar</button>
+      </div>
+    `;
+  });
+});
+
+window.aumentar = async function(id,estoque){
+  await updateDoc(doc(db,"produtos",id),{
+    estoque:estoque+1
+  });
+}
+
+window.diminuir = async function(id,estoque){
+  if(estoque>0){
+    await updateDoc(doc(db,"produtos",id),{
+      estoque:estoque-1
+    });
+  }
+}
+
+window.vender = async function(id,valor,estoque){
+  if(!caixaAberto){ alert("Abra o caixa primeiro"); return; }
+  if(estoque<=0){ alert("Sem estoque"); return; }
+
+  await updateDoc(doc(db,"produtos",id),{
+    estoque:estoque-1
+  });
+
+  totalVenda += valor;
+  totalVendaEl.innerText = totalVenda.toFixed(2);
+}
+
+window.finalizarVenda = async function(){
+  if(totalVenda===0) return;
+
+  await addDoc(collection(db,"vendas"),{
+    total:totalVenda,
+    data:new Date().toLocaleString()
+  });
+
+  totalVenda = 0;
+  totalVendaEl.innerText="0.00";
+  alert("Venda Finalizada!");
+}
+
+const totalVendaEl=document.getElementById("totalVenda");
+
+onSnapshot(collection(db,"vendas"),(snapshot)=>{
+  historico.innerHTML="";
+  snapshot.forEach(v=>{
+    let venda=v.data();
+    historico.innerHTML+=`
+      <div class="card">
+      ${venda.data}<br>
+      Total: R$ ${venda.total.toFixed(2)}
+      </div>
+    `;
+  });
+});
+
+</script>
+
+</body>
+</html>
